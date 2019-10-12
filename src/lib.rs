@@ -16,6 +16,7 @@ extern "C" {
 static_detour! {
     static GFX_LOAD: unsafe extern "C" fn(*mut Graphics);
     static GOTOROOM: unsafe extern "C" fn(*mut libc::c_void, libc::c_int, libc::c_int, *mut libc::c_void, *mut libc::c_void, *mut libc::c_void, *mut libc::c_void);
+    static UNPACK_BINARY: unsafe extern "C" fn(*mut libc::c_void, *const libc::c_char) -> bool;
 }
 
 static CUSTOM: AtomicBool = AtomicBool::new(false);
@@ -26,6 +27,12 @@ static MAKETILEARRAY: Lazy<unsafe extern "C" fn(*mut Graphics)> = Lazy::new(|| u
     transmute(libc::dlsym(
         libc::RTLD_DEFAULT,
         "_ZN8Graphics13MakeTileArrayEv\0".as_ptr() as *const _,
+    ))
+});
+static MUSICCLASS: Lazy<unsafe extern "C" fn(*mut libc::c_void)> = Lazy::new(|| unsafe {
+    transmute(libc::dlsym(
+        libc::RTLD_DEFAULT,
+        "_ZN10musicclassC1Ev\0".as_ptr() as *const _,
     ))
 });
 static LOADIMAGE: Lazy<unsafe extern "C" fn(*const libc::c_char, bool, bool) -> *mut libc::c_void> =
@@ -40,6 +47,13 @@ static ISDIRECTORY: Lazy<unsafe extern "C" fn(*const libc::c_char) -> libc::c_in
         transmute(libc::dlsym(
             libc::RTLD_DEFAULT,
             "PHYSFS_isDirectory\0".as_ptr() as *const _,
+        ))
+    });
+static EXISTS: Lazy<unsafe extern "C" fn(*const libc::c_char) -> libc::c_int> =
+    Lazy::new(|| unsafe {
+        transmute(libc::dlsym(
+            libc::RTLD_DEFAULT,
+            "PHYSFS_exists\0".as_ptr() as *const _,
         ))
     });
 
@@ -81,26 +95,55 @@ pub unsafe fn load_image(path: &CStr, no_blend: bool, no_alpha: bool) -> *mut li
 }
 
 pub fn hook_gfx(this: *mut Graphics) {
-    println!("GraphicsResources! {:?}", this);
-
     if let Some(mut lock) = GRAPHICS.try_lock() {
         *lock = Some(GfxPointer(this));
     }
 
-    println!("Graphics! {:?}", unsafe { &*this });
-
     unsafe {
         if CUSTOM.load(Ordering::SeqCst) {
-            let tiles_path = format!("{}graphics/tiles.png", CUSTOMPATH.lock());
-            let tiles2_path = format!("{}graphics/tiles2.png", CUSTOMPATH.lock());
-            (*this).im_tiles = load_image(&CString::new(tiles_path).unwrap(), false, false);
-            (*this).im_tiles2 = load_image(&CString::new(tiles2_path).unwrap(), false, false);
+            let tiles_path =
+                CString::new(format!("{}graphics/tiles.png", CUSTOMPATH.lock())).unwrap();
+            let tiles2_path =
+                CString::new(format!("{}graphics/tiles2.png", CUSTOMPATH.lock())).unwrap();
+            if (EXISTS)(tiles_path.as_ptr() as *const _) != 0 {
+                println!("redirecting tiles.png to {:?}", tiles_path);
+                (*this).im_tiles = load_image(&tiles_path, false, false);
+            }
+            if (EXISTS)(tiles2_path.as_ptr() as *const _) != 0 {
+                println!("redirecting tiles.png to {:?}", tiles2_path);
+                (*this).im_tiles2 = load_image(&tiles2_path, false, false);
+            }
         } else {
             GFX_LOAD.call(this);
         }
     }
 
     //println!("Graphics! {:?}", unsafe { &*this });
+}
+
+pub fn hook_unpack_binary(this: *mut libc::c_void, path: *const libc::c_char) -> bool {
+    if !CUSTOM.load(Ordering::SeqCst) {
+        unsafe {
+            return UNPACK_BINARY.call(this, path);
+        }
+    }
+
+    let redir_path = unsafe { CStr::from_ptr(path) }.to_str().unwrap();
+    let redir_path = CString::new(format!("{}{}", CUSTOMPATH.lock(), redir_path)).unwrap();
+
+    unsafe {
+        if (EXISTS)(redir_path.as_ptr() as *const _) != 0 {
+            println!("redirecting music to {:?}", redir_path);
+            UNPACK_BINARY.call(this, redir_path.as_ptr() as *const _)
+        } else {
+            println!(
+                "{:?} missing, keeping path untouched as {:?}",
+                redir_path,
+                CStr::from_ptr(path)
+            );
+            UNPACK_BINARY.call(this, path)
+        }
+    }
 }
 
 pub fn hook_gotoroom(
@@ -149,6 +192,9 @@ pub fn hook_gotoroom(
             println!("zeroed out arrays");
             (MAKETILEARRAY)(gfx as *mut _);
             println!("built array");
+            println!("reloading music");
+            (MUSICCLASS)(music);
+            println!("reloaded music");
         }
     }
 
@@ -175,7 +221,6 @@ fn init() {
             "_ZN17GraphicsResourcesC2Ev\0".as_ptr() as *const _,
         )
     };
-
     let gotoroom = unsafe {
         libc::dlsym(
             libc::RTLD_DEFAULT,
@@ -183,12 +228,20 @@ fn init() {
                 as *const _,
         )
     };
+    let unpack_binary = unsafe {
+        libc::dlsym(
+            libc::RTLD_DEFAULT,
+            "_ZN10binaryBlob12unPackBinaryEPKc\0".as_ptr() as *const _,
+        )
+    };
+
+    dbg!(gfx_load);
+    dbg!(gotoroom);
+    dbg!(unpack_binary);
 
     assert!(!gfx_load.is_null());
     assert!(!gotoroom.is_null());
-
-    println!("{:?}", gfx_load);
-    println!("{:?}", gotoroom);
+    assert!(!unpack_binary.is_null());
 
     unsafe {
         GFX_LOAD.initialize(transmute(gfx_load), hook_gfx).unwrap();
@@ -197,5 +250,9 @@ fn init() {
             .initialize(transmute(gotoroom), hook_gotoroom)
             .unwrap();
         GOTOROOM.enable().unwrap();
+        UNPACK_BINARY
+            .initialize(transmute(unpack_binary), hook_unpack_binary)
+            .unwrap();
+        UNPACK_BINARY.enable().unwrap();
     }
 }
