@@ -1,0 +1,19 @@
+[package]
+name = "vloader"
+version = "0.1.0"
+authors = ["leo60228 <iakornfeld@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = [ "cdylib" ]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ctor = "0.1.12"
+libc = "0.2.62"
+detour = "0.7.1"
+once_cell = "1.2.0"
+cstr = "0.1.7"
+shrinkwraprs = "0.2.1"
+parking_lot = "0.9.0"
