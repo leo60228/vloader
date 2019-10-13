@@ -9,14 +9,17 @@ use std::ffi::{CStr, CString};
 use std::mem::transmute;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-macro_rules! dlsym_fn {
-    ($id:ident: $ty:ty = $name:literal) => {
-        static $id: Lazy<$ty> = Lazy::new(|| unsafe {
-            transmute(libc::dlsym(
-                libc::RTLD_DEFAULT,
-                concat!($name, "\0").as_ptr() as *const _,
-            ))
-        });
+macro_rules! dlsym {
+    ($name:literal) => {
+        libc::dlsym(
+            libc::RTLD_DEFAULT,
+            concat!($name, "\0").as_ptr() as *const _,
+        )
+    };
+    ($(static $id:ident: $ty:ty = $name:literal;)*) => {
+        $(static $id: Lazy<$ty> = Lazy::new(|| unsafe {
+            transmute(dlsym!($name))
+        });)*
     };
 }
 
@@ -34,12 +37,14 @@ static CUSTOM: AtomicBool = AtomicBool::new(false);
 static GRAPHICS: Lazy<Mutex<Option<GfxPointer>>> = Lazy::new(Default::default);
 static CUSTOMPATH: Lazy<Mutex<String>> = Lazy::new(Default::default);
 
-dlsym_fn!(MAKETILEARRAY: unsafe extern "C" fn(*mut Graphics) = "_ZN8Graphics13MakeTileArrayEv");
-dlsym_fn!(MUSICCLASS: unsafe extern "C" fn(*mut libc::c_void) = "_ZN10musicclassC1Ev");
-dlsym_fn!(MUSICCLASS_DTOR: unsafe extern "C" fn(*mut libc::c_void) = "_ZN10musicclassD1Ev");
-dlsym_fn!(LOADIMAGE: unsafe extern "C" fn(*const libc::c_char, bool, bool) -> *mut libc::c_void = "_Z9LoadImagePKcbb");
-dlsym_fn!(ISDIRECTORY: unsafe extern "C" fn(*const libc::c_char) -> libc::c_int = "PHYSFS_isDirectory");
-dlsym_fn!(EXISTS: unsafe extern "C" fn(*const libc::c_char) -> libc::c_int = "PHYSFS_exists");
+dlsym! {
+    static MAKETILEARRAY: unsafe extern "C" fn(*mut Graphics) = "_ZN8Graphics13MakeTileArrayEv";
+    static MUSICCLASS: unsafe extern "C" fn(*mut libc::c_void) = "_ZN10musicclassC1Ev";
+    static MUSICCLASS_DTOR: unsafe extern "C" fn(*mut libc::c_void) = "_ZN10musicclassD1Ev";
+    static LOADIMAGE: unsafe extern "C" fn(*const libc::c_char, bool, bool) -> *mut libc::c_void = "_Z9LoadImagePKcbb";
+    static ISDIRECTORY: unsafe extern "C" fn(*const libc::c_char) -> libc::c_int = "PHYSFS_isDirectory";
+    static EXISTS: unsafe extern "C" fn(*const libc::c_char) -> libc::c_int = "PHYSFS_exists";
+}
 
 #[derive(Shrinkwrap, Debug, Clone, Copy)]
 pub struct GfxPointer(*mut Graphics);
@@ -200,23 +205,11 @@ fn init() {
         return;
     }
 
-    let gfx_load = unsafe {
-        libc::dlsym(
-            libc::RTLD_DEFAULT,
-            "_ZN17GraphicsResourcesC2Ev\0".as_ptr() as *const _,
-        )
-    };
-    let gotoroom = unsafe {
-        libc::dlsym(
-            libc::RTLD_DEFAULT,
-            "_ZN8mapclass8gotoroomEiiR8GraphicsR4GameR11entityclassR10musicclass\0".as_ptr()
-                as *const _,
-        )
-    };
-    let unpack_binary = unsafe {
-        libc::dlsym(
-            libc::RTLD_DEFAULT,
-            "_ZN10binaryBlob12unPackBinaryEPKc\0".as_ptr() as *const _,
+    let (gfx_load, gotoroom, unpack_binary) = unsafe {
+        (
+            dlsym!("_ZN17GraphicsResourcesC2Ev"),
+            dlsym!("_ZN8mapclass8gotoroomEiiR8GraphicsR4GameR11entityclassR10musicclass"),
+            dlsym!("_ZN10binaryBlob12unPackBinaryEPKc"),
         )
     };
 
