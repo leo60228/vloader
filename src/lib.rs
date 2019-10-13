@@ -9,6 +9,17 @@ use std::ffi::{CStr, CString};
 use std::mem::transmute;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+macro_rules! dlsym_fn {
+    ($id:ident: $ty:ty = $name:literal) => {
+        static $id: Lazy<$ty> = Lazy::new(|| unsafe {
+            transmute(libc::dlsym(
+                libc::RTLD_DEFAULT,
+                concat!($name, "\0").as_ptr() as *const _,
+            ))
+        });
+    };
+}
+
 extern "C" {
     static __progname: *const libc::c_char;
 }
@@ -23,39 +34,12 @@ static CUSTOM: AtomicBool = AtomicBool::new(false);
 static GRAPHICS: Lazy<Mutex<Option<GfxPointer>>> = Lazy::new(Default::default);
 static CUSTOMPATH: Lazy<Mutex<String>> = Lazy::new(Default::default);
 
-static MAKETILEARRAY: Lazy<unsafe extern "C" fn(*mut Graphics)> = Lazy::new(|| unsafe {
-    transmute(libc::dlsym(
-        libc::RTLD_DEFAULT,
-        "_ZN8Graphics13MakeTileArrayEv\0".as_ptr() as *const _,
-    ))
-});
-static MUSICCLASS: Lazy<unsafe extern "C" fn(*mut libc::c_void)> = Lazy::new(|| unsafe {
-    transmute(libc::dlsym(
-        libc::RTLD_DEFAULT,
-        "_ZN10musicclassC1Ev\0".as_ptr() as *const _,
-    ))
-});
-static LOADIMAGE: Lazy<unsafe extern "C" fn(*const libc::c_char, bool, bool) -> *mut libc::c_void> =
-    Lazy::new(|| unsafe {
-        transmute(libc::dlsym(
-            libc::RTLD_DEFAULT,
-            "_Z9LoadImagePKcbb\0".as_ptr() as *const _,
-        ))
-    });
-static ISDIRECTORY: Lazy<unsafe extern "C" fn(*const libc::c_char) -> libc::c_int> =
-    Lazy::new(|| unsafe {
-        transmute(libc::dlsym(
-            libc::RTLD_DEFAULT,
-            "PHYSFS_isDirectory\0".as_ptr() as *const _,
-        ))
-    });
-static EXISTS: Lazy<unsafe extern "C" fn(*const libc::c_char) -> libc::c_int> =
-    Lazy::new(|| unsafe {
-        transmute(libc::dlsym(
-            libc::RTLD_DEFAULT,
-            "PHYSFS_exists\0".as_ptr() as *const _,
-        ))
-    });
+dlsym_fn!(MAKETILEARRAY: unsafe extern "C" fn(*mut Graphics) = "_ZN8Graphics13MakeTileArrayEv");
+dlsym_fn!(MUSICCLASS: unsafe extern "C" fn(*mut libc::c_void) = "_ZN10musicclassC1Ev");
+dlsym_fn!(MUSICCLASS_DTOR: unsafe extern "C" fn(*mut libc::c_void) = "_ZN10musicclassD1Ev");
+dlsym_fn!(LOADIMAGE: unsafe extern "C" fn(*const libc::c_char, bool, bool) -> *mut libc::c_void = "_Z9LoadImagePKcbb");
+dlsym_fn!(ISDIRECTORY: unsafe extern "C" fn(*const libc::c_char) -> libc::c_int = "PHYSFS_isDirectory");
+dlsym_fn!(EXISTS: unsafe extern "C" fn(*const libc::c_char) -> libc::c_int = "PHYSFS_exists");
 
 #[derive(Shrinkwrap, Debug, Clone, Copy)]
 pub struct GfxPointer(*mut Graphics);
@@ -193,6 +177,7 @@ pub fn hook_gotoroom(
             (MAKETILEARRAY)(gfx as *mut _);
             println!("built array");
             println!("reloading music");
+            (MUSICCLASS_DTOR)(music);
             (MUSICCLASS)(music);
             println!("reloaded music");
         }
