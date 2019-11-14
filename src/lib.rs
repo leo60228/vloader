@@ -34,6 +34,7 @@ dlsym! {
 
 pub fn hook_physfs_init(argv0: *mut libc::c_char) -> libc::c_int {
     println!("PHYSFS_init({:?})", argv0);
+    panic!("panic test");
     unsafe {
         SYMLINKS(1);
         PHYSFS_INIT.call(argv0)

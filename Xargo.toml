@@ -1,0 +1,17 @@
+[patch.crates-io.cpp_demangle]
+git = "https://github.com/leo60228/cpp_demangle.git"
+
+[dependencies.backtrace]
+version = "0.3.37"
+default-features = false
+features = ["cpp_demangle", "rustc-dep-of-std"]
+
+[dependencies.cpp_demangle]
+git = "https://github.com/leo60228/cpp_demangle.git"
+version = "0.2.3"
+default-features = false
+features = ["alloc"]
+
+[dependencies.std]
+features = ["panic-unwind", "backtrace"]
+
