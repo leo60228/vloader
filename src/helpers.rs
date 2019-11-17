@@ -4,6 +4,13 @@ use libloading::Symbol;
 use once_cell::sync::Lazy;
 use procfs::process::Process;
 use std::path::PathBuf;
+use detour::{StaticDetour, Function};
+
+#[allow(dead_code)]
+pub struct SyncPtr<T: ?Sized>(pub *mut T);
+
+unsafe impl<T: ?Sized> Send for SyncPtr<T> {}
+unsafe impl<T: ?Sized> Sync for SyncPtr<T> {}
 
 macro_rules! dlsym {
     ($($vis:vis static $id:ident: $ty:ty = $name:literal;)*) => {
@@ -32,4 +39,9 @@ pub fn cmdline() -> Vec<String> {
 
 pub fn exe() -> PathBuf {
     Process::myself().unwrap().exe().unwrap()
+}
+
+pub unsafe fn hook<T, D>(detour: &StaticDetour<T>, func: T, hook: D) where T: Function, D: Fn<T::Arguments, Output = T::Output> + Send + 'static {
+    detour.initialize(func, hook).unwrap();
+    detour.enable().unwrap();
 }
