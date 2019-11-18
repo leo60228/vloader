@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 
 pub fn exe() -> PathBuf {
-    fs::read_to_string("/proc/self/exe").unwrap().into()
+    fs::read_link("/proc/self/exe").unwrap()
 }
 
 pub fn cmdline() -> Vec<String> {
