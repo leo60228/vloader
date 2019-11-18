@@ -1,10 +1,8 @@
+use detour::{Function, StaticDetour};
 use libloading::os::unix::Library as UnixLibrary;
 use libloading::Library;
 use libloading::Symbol;
 use once_cell::sync::Lazy;
-use procfs::process::Process;
-use std::path::PathBuf;
-use detour::{StaticDetour, Function};
 
 #[allow(dead_code)]
 pub struct SyncPtr<T: ?Sized>(pub *mut T);
@@ -33,15 +31,11 @@ pub unsafe fn get_symbol<T>(symbol: &[u8]) -> Symbol<'static, T> {
     RTLD_DEFAULT.get(symbol).unwrap()
 }
 
-pub fn cmdline() -> Vec<String> {
-    Process::myself().unwrap().cmdline().unwrap()
-}
-
-pub fn exe() -> PathBuf {
-    Process::myself().unwrap().exe().unwrap()
-}
-
-pub unsafe fn hook<T, D>(detour: &StaticDetour<T>, func: T, hook: D) where T: Function, D: Fn<T::Arguments, Output = T::Output> + Send + 'static {
+pub unsafe fn hook<T, D>(detour: &StaticDetour<T>, func: T, hook: D)
+where
+    T: Function,
+    D: Fn<T::Arguments, Output = T::Output> + Send + 'static,
+{
     detour.initialize(func, hook).unwrap();
     detour.enable().unwrap();
 }

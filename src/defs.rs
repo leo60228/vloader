@@ -1,6 +1,6 @@
+use crate::helpers::SyncPtr;
 use detour::static_detour;
 use libc::c_void;
-use crate::helpers::SyncPtr;
 
 static_detour! {
     pub static HOOK_PHYSFS_INIT: unsafe extern "C" fn(*mut libc::c_char) -> libc::c_int;
