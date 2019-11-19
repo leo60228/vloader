@@ -49,6 +49,39 @@ pub fn hook_titleinput(
     }
 }
 
+pub fn hook_gameinput(
+    key: *mut c_void,
+    dwgfx: *mut c_void,
+    game: *mut c_void,
+    map: *mut c_void,
+    obj: *mut c_void,
+    help: *mut c_void,
+    music: *mut c_void,
+) {
+    let hascontrol_ptr = game.wrapping_offset(0x74) as *mut bool;
+    let state_ptr = game.wrapping_offset(96) as *mut libc::c_int;
+    let running_ptr = SCRIPT_GLOBAL.0.wrapping_offset(100) as *mut bool;
+    let delay_ptr = SCRIPT_GLOBAL.0.wrapping_offset(96) as *mut libc::c_int;
+    unsafe {
+        if *state_ptr == 5000 {
+            let delay = *delay_ptr;
+            let hascontrol = *hascontrol_ptr;
+            let running = *running_ptr;
+            *delay_ptr = 0;
+            *hascontrol_ptr = true;
+            *running_ptr = false;
+            HOOK_GAMEINPUT.call(key, dwgfx, game, map, obj, help, music);
+            *delay_ptr = delay;
+            *hascontrol_ptr = hascontrol;
+            if *running_ptr == false {
+                *running_ptr = running;
+            }
+        } else {
+            HOOK_GAMEINPUT.call(key, dwgfx, game, map, obj, help, music);
+        }
+    }
+}
+
 #[ctor]
 fn init() {
     let exe = exe();
@@ -66,6 +99,9 @@ fn init() {
     let titleinput = unsafe {
         get_symbol(b"_Z10titleinputR7KeyPollR8GraphicsR8mapclassR4GameR11entityclassR12UtilityClassR10musicclass")
     };
+    let gameinput = unsafe {
+        get_symbol(b"_Z9gameinputR7KeyPollR8GraphicsR4GameR8mapclassR11entityclassR12UtilityClassR10musicclass")
+    };
 
     unsafe {
         hook(&HOOK_PHYSFS_INIT, *physfs_init, hook_physfs_init);
@@ -75,5 +111,6 @@ fn init() {
             hook_preloader_render,
         );
         hook(&HOOK_TITLEINPUT, *titleinput, hook_titleinput);
+        hook(&HOOK_GAMEINPUT, *gameinput, hook_gameinput);
     }
 }
