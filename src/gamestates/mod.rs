@@ -2,7 +2,15 @@ use std::os::raw::*;
 
 pub mod pdelay;
 
-pub type GamestateCallback = unsafe fn(*mut c_void, *mut c_void, *mut c_void, *mut c_void, *mut c_void, *mut c_void, *mut c_void);
+pub type GamestateCallback = unsafe fn(
+    *mut c_void,
+    *mut c_void,
+    *mut c_void,
+    *mut c_void,
+    *mut c_void,
+    *mut c_void,
+    *mut c_void,
+);
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum GamestateTime {
@@ -19,7 +27,11 @@ pub struct Gamestate {
 
 impl Gamestate {
     pub fn new(num: c_int, time: GamestateTime, callback: GamestateCallback) -> Self {
-        Self { num, time, callback }
+        Self {
+            num,
+            time,
+            callback,
+        }
     }
 }
 

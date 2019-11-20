@@ -4,6 +4,6 @@
 #[macro_use]
 pub mod helpers;
 mod defs;
+mod gamestates;
 mod patches;
 mod state;
-mod gamestates;

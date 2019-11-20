@@ -1,6 +1,6 @@
-use std::sync::{Mutex, MutexGuard};
-use std::os::raw::*;
 use once_cell::sync::Lazy;
+use std::os::raw::*;
+use std::sync::{Mutex, MutexGuard};
 
 #[derive(Default, Clone)]
 pub struct State {

@@ -26,8 +26,16 @@ macro_rules! hook {
     ($hook:ident @ $sym:literal = $func:expr) => {
         #[::ctor::ctor]
         unsafe fn apply_hook() {
-            if !$crate::helpers::is_v6() { return; }
-            println!("hooking {:?} with {}", std::str::from_utf8($sym), stringify!($func));
+            if !$crate::helpers::is_v6() {
+                return;
+            }
+            println!(
+                "hooking {} with {}",
+                ::cpp_demangle::Symbol::new($sym as &[u8])
+                    .map(|x| x.to_string())
+                    .unwrap_or_else(|_| String::from_utf8_lossy($sym).into()),
+                stringify!($func)
+            );
             $crate::helpers::hook(&$hook, $sym, $func);
         }
     };
@@ -57,6 +65,11 @@ pub fn exe() -> PathBuf {
 }
 
 pub fn is_v6() -> bool {
-    static IS_V6: Lazy<bool> = Lazy::new(|| exe().file_name().map(|x| x == "vvvvvv.x86_64").unwrap_or(false));
+    static IS_V6: Lazy<bool> = Lazy::new(|| {
+        exe()
+            .file_name()
+            .map(|x| x == "vvvvvv.x86_64")
+            .unwrap_or(false)
+    });
     *IS_V6
 }

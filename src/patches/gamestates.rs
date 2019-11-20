@@ -1,6 +1,6 @@
-use std::os::raw::*;
 use crate::defs::*;
 use crate::gamestates::*;
+use std::os::raw::*;
 
 fn hook_gameinput(
     key: *mut c_void,

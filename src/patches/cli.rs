@@ -1,5 +1,5 @@
-use std::os::raw::*;
 use crate::defs::*;
+use std::os::raw::*;
 
 pub fn hook_titleinput(
     key: *mut c_void,

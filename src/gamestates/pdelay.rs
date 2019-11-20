@@ -1,6 +1,6 @@
 use super::*;
-use crate::state::*;
 use crate::defs::*;
+use crate::state::*;
 
 pub unsafe fn pdelay_pre(
     _key: *mut c_void,
