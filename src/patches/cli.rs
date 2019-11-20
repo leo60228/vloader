@@ -1,7 +1,7 @@
 use crate::defs::*;
 use std::os::raw::*;
 
-pub fn hook_titleinput(
+fn hook_titleinput(
     key: *mut c_void,
     dwgfx: *mut c_void,
     map: *mut c_void,

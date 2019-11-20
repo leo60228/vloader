@@ -1,7 +1,7 @@
 use crate::defs::*;
 use std::os::raw::*;
 
-pub fn hook_physfs_init(argv0: *mut c_char) -> c_int {
+fn hook_physfs_init(argv0: *mut c_char) -> c_int {
     unsafe {
         PHYSFS_permitSymbolicLinks(1);
         HOOK_PHYSFS_INIT.call(argv0)

@@ -1,7 +1,7 @@
 use crate::defs::*;
 use std::os::raw::*;
 
-pub fn hook_preloader_render(_dwgfx: *mut c_void, game: *mut c_void, _help: *mut c_void) {
+fn hook_preloader_render(_dwgfx: *mut c_void, game: *mut c_void, _help: *mut c_void) {
     let gamestate_ptr = game.wrapping_offset(112) as *mut libc::c_int;
     unsafe {
         *gamestate_ptr = 1;
