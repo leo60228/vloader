@@ -22,6 +22,17 @@ macro_rules! dlsym {
     };
 }
 
+macro_rules! hook {
+    ($hook:ident @ $sym:literal = $func:expr) => {
+        #[::ctor::ctor]
+        unsafe fn apply_hook() {
+            if !$crate::helpers::is_v6() { return; }
+            println!("hooking {:?} with {}", std::str::from_utf8($sym), stringify!($func));
+            $crate::helpers::hook(&$hook, $sym, $func);
+        }
+    };
+}
+
 pub fn rtld_default() -> Library {
     unsafe { UnixLibrary::from_raw(libc::RTLD_DEFAULT) }.into()
 }
@@ -32,15 +43,20 @@ pub unsafe fn get_symbol<T>(symbol: &[u8]) -> Symbol<'static, T> {
     RTLD_DEFAULT.get(symbol).unwrap()
 }
 
-pub unsafe fn hook<T, D>(detour: &StaticDetour<T>, func: T, hook: D)
+pub unsafe fn hook<T, D>(detour: &StaticDetour<T>, func: &[u8], hook: D)
 where
     T: Function,
     D: Fn<T::Arguments, Output = T::Output> + Send + 'static,
 {
-    detour.initialize(func, hook).unwrap();
+    detour.initialize(*get_symbol(func), hook).unwrap();
     detour.enable().unwrap();
 }
 
 pub fn exe() -> PathBuf {
     PathBuf::from(libargs::args().into_iter().next().unwrap())
+}
+
+pub fn is_v6() -> bool {
+    static IS_V6: Lazy<bool> = Lazy::new(|| exe().file_name().map(|x| x == "vvvvvv.x86_64").unwrap_or(false));
+    *IS_V6
 }
