@@ -3,14 +3,16 @@
 
 #[macro_use]
 mod helpers;
+mod args;
 mod defs;
-mod proc;
 
+use crate::args::*;
 use crate::defs::*;
 use crate::helpers::*;
-use crate::proc::*;
-use ctor::ctor;
 use libc::c_void;
+
+#[cfg(not(target_os = "linux"))]
+use ctor::ctor;
 
 pub fn hook_physfs_init(argv0: *mut libc::c_char) -> libc::c_int {
     println!("PHYSFS_init({:?})", argv0);
@@ -82,7 +84,7 @@ pub fn hook_gameinput(
     }
 }
 
-#[ctor]
+#[cfg_attr(not(target_os = "linux"), ctor)]
 fn init() {
     let exe = exe();
     let progname = exe.file_name().unwrap();
