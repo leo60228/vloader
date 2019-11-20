@@ -3,6 +3,7 @@ use libloading::os::unix::Library as UnixLibrary;
 use libloading::Library;
 use libloading::Symbol;
 use once_cell::sync::Lazy;
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 pub struct SyncPtr<T: ?Sized>(pub *mut T);
@@ -38,4 +39,8 @@ where
 {
     detour.initialize(func, hook).unwrap();
     detour.enable().unwrap();
+}
+
+pub fn exe() -> PathBuf {
+    PathBuf::from(libargs::args().into_iter().next().unwrap())
 }

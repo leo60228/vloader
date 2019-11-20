@@ -3,15 +3,11 @@
 
 #[macro_use]
 mod helpers;
-mod args;
 mod defs;
 
-use crate::args::*;
 use crate::defs::*;
 use crate::helpers::*;
 use libc::c_void;
-
-#[cfg(not(target_os = "linux"))]
 use ctor::ctor;
 
 pub fn hook_physfs_init(argv0: *mut libc::c_char) -> libc::c_int {
@@ -40,7 +36,7 @@ pub fn hook_titleinput(
 ) {
     let playcustomlevel_ptr = game.wrapping_offset(1640) as *mut libc::c_int;
     unsafe {
-        if let Some(idx) = cmdline().get(1).and_then(|s| s.parse().ok()) {
+        if let Some(idx) = libargs::args().get(1).and_then(|s| s.parse().ok()) {
             editorclass_getDirectoryData(ED_GLOBAL.0);
             *playcustomlevel_ptr = idx;
             scriptclass_startgamemode(SCRIPT_GLOBAL.0, 22, key, dwgfx, game, map, obj, help, music);
@@ -84,7 +80,7 @@ pub fn hook_gameinput(
     }
 }
 
-#[cfg_attr(not(target_os = "linux"), ctor)]
+#[ctor]
 fn init() {
     let exe = exe();
     let progname = exe.file_name().unwrap();
@@ -93,7 +89,7 @@ fn init() {
         return;
     }
 
-    println!("{:?}", cmdline());
+    println!("{:?}", libargs::args());
 
     let physfs_init = unsafe { get_symbol(b"PHYSFS_init") };
     let preloader_render =
