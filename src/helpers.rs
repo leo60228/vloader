@@ -29,7 +29,7 @@ macro_rules! hook {
             if !$crate::helpers::is_v6() {
                 return;
             }
-            println!(
+            log::info!(
                 "hooking {} with {}",
                 ::cpp_demangle::Symbol::new($sym as &[u8])
                     .map(|x| x.to_string())

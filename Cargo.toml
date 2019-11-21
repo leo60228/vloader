@@ -18,6 +18,12 @@ libloading = "0.5.2"
 libargs = "0.1.0"
 inventory = "0.1.4"
 cpp_demangle = "0.2.14"
+log = "0.4.8"
+
+[dependencies.cute-log]
+version = "1.3.0"
+default-features = false
+features = ["color"]
 
 [profile.release]
 panic = "abort"
