@@ -11,6 +11,7 @@ fn hook_titleinput(
     music: *mut c_void,
 ) {
     let playcustomlevel_ptr = game.wrapping_offset(1640) as *mut libc::c_int;
+    let fademode_ptr = dwgfx.wrapping_offset(840) as *mut c_int;
     let args: Vec<c_int> = libargs::args()
         .into_iter()
         .skip(1)
@@ -20,7 +21,7 @@ fn hook_titleinput(
         if args.len() == 0 {
             HOOK_TITLEINPUT.disable().unwrap();
             HOOK_TITLEINPUT.call(key, dwgfx, map, game, obj, help, music);
-        } else if args.len() == 1 || args.len() == 5 {
+        } else if args.len() == 1 || args.len() == 5 || args.len() == 6 {
             let gamemode = if args.len() == 1 { 22 } else { 23 };
             let idx = args[0];
             editorclass_getDirectoryData(ED_GLOBAL.0);
@@ -36,6 +37,14 @@ fn hook_titleinput(
                 help,
                 music,
             );
+
+            if args.len() >= 5 {
+                *fademode_ptr = 0;
+            }
+
+            if args.len() == 6 {
+                musicclass_play(music, args[5]);
+            }
         } else {
             log::error!("Bad number of arguments: {}", args.len());
             std::process::exit(64); // EX_USAGE from sysexits.h
@@ -58,7 +67,7 @@ fn hook_customloadquick(
         .skip(1)
         .flat_map(|x| x.parse())
         .collect();
-    if args.len() == 5 {
+    if args.len() >= 5 {
         let savex_ptr = this.wrapping_offset(48) as *mut c_int;
         let savey_ptr = this.wrapping_offset(52) as *mut c_int;
         let saverx_ptr = this.wrapping_offset(56) as *mut c_int;
