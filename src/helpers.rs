@@ -28,7 +28,11 @@ macro_rules! hook {
             #[::ctor::ctor]
             #[allow(non_snake_case)]
             unsafe fn [<apply_ $hook>]() {
-                if !$crate::helpers::is_v6() {
+                if !$crate::helpers::is_v6()
+                    || ::std::env::var(concat!("DISABLE_", stringify!($hook)))
+                        .map(|x| x != "")
+                        .unwrap_or(false)
+                {
                     return;
                 }
                 log::info!(
