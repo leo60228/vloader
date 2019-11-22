@@ -12,7 +12,7 @@ fn hook_gameinput(
     music: *mut c_void,
 ) {
     unsafe {
-        let state_ptr = game.wrapping_offset(96) as *mut libc::c_int;
+        let state_ptr = game.wrapping_offset(96) as *mut c_int;
         let state = *state_ptr;
 
         for s in inventory::iter::<Gamestate> {

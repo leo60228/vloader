@@ -24,19 +24,22 @@ macro_rules! dlsym {
 
 macro_rules! hook {
     ($hook:ident @ $sym:literal = $func:expr) => {
-        #[::ctor::ctor]
-        unsafe fn apply_hook() {
-            if !$crate::helpers::is_v6() {
-                return;
+        ::paste::item! {
+            #[::ctor::ctor]
+            #[allow(non_snake_case)]
+            unsafe fn [<apply_ $hook>]() {
+                if !$crate::helpers::is_v6() {
+                    return;
+                }
+                log::info!(
+                    "hooking {} with {}",
+                    ::cpp_demangle::Symbol::new($sym as &[u8])
+                        .map(|x| x.to_string())
+                        .unwrap_or_else(|_| String::from_utf8_lossy($sym).into()),
+                    stringify!($func)
+                );
+                $crate::helpers::hook(&$hook, $sym, $func);
             }
-            log::info!(
-                "hooking {} with {}",
-                ::cpp_demangle::Symbol::new($sym as &[u8])
-                    .map(|x| x.to_string())
-                    .unwrap_or_else(|_| String::from_utf8_lossy($sym).into()),
-                stringify!($func)
-            );
-            $crate::helpers::hook(&$hook, $sym, $func);
         }
     };
 }
