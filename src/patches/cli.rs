@@ -21,7 +21,7 @@ fn hook_titleinput(
         if args.len() == 0 {
             HOOK_TITLEINPUT.disable().unwrap();
             HOOK_TITLEINPUT.call(key, dwgfx, map, game, obj, help, music);
-        } else if args.len() == 1 || args.len() == 5 || args.len() == 6 {
+        } else if args.len() == 1 || args.len() == 6 || args.len() == 7 {
             let gamemode = if args.len() == 1 { 22 } else { 23 };
             let idx = args[0];
             editorclass_getDirectoryData(ED_GLOBAL.0);
@@ -38,11 +38,11 @@ fn hook_titleinput(
                 music,
             );
 
-            if args.len() >= 5 {
+            if args.len() >= 6 {
                 *fademode_ptr = 0;
             }
 
-            if args.len() == 6 {
+            if args.len() == 7 {
                 musicclass_play(music, args[5]);
             }
         } else {
@@ -67,16 +67,18 @@ fn hook_customloadquick(
         .skip(1)
         .flat_map(|x| x.parse())
         .collect();
-    if args.len() >= 5 {
+    if args.len() >= 6 {
         let savex_ptr = this.wrapping_offset(48) as *mut c_int;
         let savey_ptr = this.wrapping_offset(52) as *mut c_int;
         let saverx_ptr = this.wrapping_offset(56) as *mut c_int;
         let savery_ptr = this.wrapping_offset(60) as *mut c_int;
+        let savegc_ptr = this.wrapping_offset(64) as *mut c_int;
 
         let savex = args[1];
         let savey = args[2];
         let saverx = args[3];
         let savery = args[4];
+        let savegc = args[5];
 
         log::info!(
             "starting custom level at room ({}, {}) position ({}, {})",
@@ -91,6 +93,7 @@ fn hook_customloadquick(
             *savery_ptr = savery;
             *savex_ptr = savex;
             *savey_ptr = savey;
+            *savegc_ptr = savegc;
         }
     }
 }
