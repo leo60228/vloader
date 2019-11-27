@@ -43,7 +43,7 @@ fn hook_titleinput(
             }
 
             if args.len() == 7 {
-                musicclass_play(music, args[5]);
+                musicclass_play(music, args[6]);
             }
         } else {
             log::error!("Bad number of arguments: {}", args.len());
