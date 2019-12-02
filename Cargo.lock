@@ -143,14 +143,6 @@ version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "libargs"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "once_cell 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -332,7 +324,6 @@ dependencies = [
  "cute-log 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "detour 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "inventory 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "libargs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.65 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -489,7 +480,6 @@ dependencies = [
 "checksum js-sys 0.3.32 (registry+https://github.com/rust-lang/crates.io-index)" = "1c840fdb2167497b0bd0db43d6dfe61e91637fa72f9d061f8bd17ddc44ba6414"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 "checksum lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
-"checksum libargs 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f2ff577225fd5ba1f09d8ebbaa8f087b85552d3fd64a191f1da7bf18f19cfaa8"
 "checksum libc 0.2.65 (registry+https://github.com/rust-lang/crates.io-index)" = "1a31a0627fdf1f6a39ec0dd577e101440b7db22672c0901fe00a9a6fbb5c24e8"
 "checksum libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f2b111a074963af1d37a139918ac6d49ad1d0d5e47f72fd55388619691a7d753"
 "checksum libudis86-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "139bbf9ddb1bfc90c1ac64dd2923d9c957cd433cee7315c018125d72ab08a6b0"

@@ -12,7 +12,7 @@ fn hook_titleinput(
 ) {
     let playcustomlevel_ptr = game.wrapping_offset(1640) as *mut libc::c_int;
     let fademode_ptr = dwgfx.wrapping_offset(840) as *mut c_int;
-    let args: Vec<c_int> = libargs::args()
+    let args: Vec<c_int> = std::env::args()
         .into_iter()
         .skip(1)
         .flat_map(|x| x.parse())
@@ -62,7 +62,7 @@ fn hook_customloadquick(
     unsafe {
         HOOK_CUSTOMLOADQUICK.call(this, level, map, obj, music);
     }
-    let args: Vec<c_int> = libargs::args()
+    let args: Vec<c_int> = std::env::args()
         .into_iter()
         .skip(1)
         .flat_map(|x| x.parse())

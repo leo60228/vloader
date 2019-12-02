@@ -68,7 +68,7 @@ where
 }
 
 pub fn exe() -> PathBuf {
-    PathBuf::from(libargs::args().into_iter().next().unwrap())
+    PathBuf::from(std::env::args().into_iter().next().unwrap())
 }
 
 pub fn is_v6() -> bool {
