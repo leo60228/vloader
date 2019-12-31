@@ -1,10 +1,14 @@
 #![recursion_limit = "8192"]
-#![feature(unboxed_closures)]
+#![feature(unboxed_closures, stmt_expr_attributes)]
+
+#[macro_use]
+extern crate rental;
 
 #[macro_use]
 pub mod helpers;
 mod defs;
 mod gamestates;
+pub mod lua;
 mod patches;
 mod state;
 
